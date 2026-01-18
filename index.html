@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>مصمم كفرات الجوال</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .app {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 20px;
+    }
+
+    .panel {
+      background: #fff;
+      border-radius: 14px;
+      padding: 18px 20px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    select, input[type="file"] {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
+
+    .small-note {
+      font-size: 12px;
+      color: #777;
+      margin-top: 2px;
+      margin-bottom: 10px;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 13px;
+    }
+
+    .row input[type="range"] {
+      flex: 1;
+    }
+
+    button {
+      padding: 10px 16px;
+      border-radius: 10px;
+      border: none;
+      background: #111827;
+      color: #fff;
+      font-size: 14px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background: #0f172a;
+    }
+
+    .preview-inner {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 420px;
+    }
+
+    .phone-wrapper {
+      position: relative;
+      width: 260px;
+      height: 520px;
+      border-radius: 40px;
+      background: #111;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      overflow: hidden;
+    }
+
+    .case {
+      position: absolute;
+      inset: 10px;
+      border-radius: 34px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    #bgCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* قاعدة عامة للكاميرا */
+    .camera-overlay {
+      position: absolute;
+      pointer-events: none;
+    }
+
+    .camera-lens {
+      background: #000;
+      border-radius: 50%;
+    }
+
+    /* iPhone 15 (جزيرة علوية وسطية بسيطة) */
+    .iphone-15 .camera-overlay {
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90px;
+      height: 26px;
+      background: #000;
+      border-radius: 16px;
+    }
+
+    /* iPhone 14 (جزيرة أصغر) */
+    .iphone-14 .camera-overlay {
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 70px;
+      height: 24px;
+      background: #000;
+      border-radius: 14px;
+    }
+
+    /* iPhone 13 (نوتش أعرض) */
+    .iphone-13 .camera-overlay {
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 110px;
+      height: 26px;
+      background: #000;
+      border-radius: 16px;
+    }
+
+    /* Samsung S23 / S24 (3 عدسات طولية) */
+    .s23 .camera-overlay,
+    .s24 .camera-overlay {
+      top: 40px;
+      left: 18px;
+      width: 40px;
+      height: 150px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .s23 .camera-overlay .camera-lens,
+    .s24 .camera-overlay .camera-lens {
+      width: 38px;
+      height: 38px;
+    }
+
+    /* Samsung S23 Ultra / S24 Ultra (4 عدسات تقريبية) */
+    .s23-ultra .camera-overlay,
+    .s24-ultra .camera-overlay {
+      top: 36px;
+      left: 18px;
+      width: 90px;
+      height: 170px;
+      display: grid;
+      grid-template-columns: repeat(2, 40px);
+      grid-template-rows: repeat(3, 40px);
+      gap: 10px;
+    }
+
+    .s23-ultra .camera-overlay .camera-lens,
+    .s24-ultra .camera-overlay .camera-lens {
+      width: 38px;
+      height: 38px;
+    }
+
+    /* Note 20 (مستطيل كاميرا) */
+    .note-20 .camera-overlay {
+      top: 34px;
+      left: 18px;
+      width: 70px;
+      height: 130px;
+      background: #000;
+      border-radius: 18px;
+      padding: 8px;
+      box-sizing: border-box;
+      display: grid;
+      grid-template-columns: 1fr;
+      grid-template-rows: repeat(3, 1fr);
+      gap: 6px;
+    }
+
+    .note-20 .camera-overlay .camera-lens {
+      width: 100%;
+      height: 100%;
+    }
+
+    @media (max-width: 900px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>مصمم كفرات الجوال</h1>
+
+  <div class="app">
+    <!-- لوحة التحكم -->
+    <div class="panel">
+      <div>
+        <label for="phoneModel">نوع الجوال</label>
+        <select id="phoneModel">
+          <option value="iphone-15">iPhone 15</option>
+          <option value="iphone-14">iPhone 14</option>
+          <option value="iphone-13">iPhone 13</option>
+
+          <option value="s24-ultra">Samsung S24 Ultra</option>
+          <option value="s24">Samsung S24</option>
+
+          <option value="s23-ultra">Samsung S23 Ultra</option>
+          <option value="s23">Samsung S23</option>
+
+          <option value="note-20">Samsung Note 20</option>
+        </select>
+        <p class="small-note">المقاسات تقريبية للمعاينة، ويمكن لاحقًا ضبطها للطباعة بدقة.</p>
+      </div>
+
+      <div>
+        <label for="bgUpload">اختيار الخلفية / الصورة</label>
+        <input type="file" id="bgUpload" accept="image/*" />
+        <p class="small-note">اختاري صورة من جهازك ليتم وضعها على الكفر.</p>
+      </div>
+
+      <div>
+        <label>التحكم في التكبير والتحريك</label>
+        <div class="row">
+          <span>تكبير</span>
+          <input type="range" id="scaleRange" min="0.5" max="2.5" step="0.05" value="1" />
+        </div>
+        <div class="row">
+          <span>يمين/يسار</span>
+          <input type="range" id="offsetXRange" min="-200" max="200" step="5" value="0" />
+        </div>
+        <div class="row">
+          <span>فوق/تحت</span>
+          <input type="range" id="offsetYRange" min="-200" max="200" step="5" value="0" />
+        </div>
+        <p class="small-note">يمكنك أيضًا السحب بالماوس أو اللمس، والتكبير بإصبعين على الجوال.</p>
+      </div>
+
+      <button id="downloadBtn">تحميل التصميم PNG جاهز للطباعة</button>
+      <p class="small-note">سيتم حفظ صورة الكفر كما تظهر في المعاينة.</p>
+    </div>
+
+    <!-- المعاينة -->
+    <div class="panel">
+      <h3>معاينة الكفر</h3>
+      <div class="preview-inner">
+        <div class="phone-wrapper iphone-15" id="phoneWrapper">
+          <div class="case">
+            <canvas id="bgCanvas"></canvas>
+          </div>
+          <!-- طبقة الكاميرا -->
+          <div class="camera-overlay" id="cameraOverlay"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('bgUpload');
+    const canvas = document.getElementById('bgCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const scaleRange = document.getElementById('scaleRange');
+    const offsetXRange = document.getElementById('offsetXRange');
+    const offsetYRange = document.getElementById('offsetYRange');
+
+    const phoneModelSelect = document.getElementById('phoneModel');
+    const phoneWrapper = document.getElementById('phoneWrapper');
+    const cameraOverlay = document.getElementById('cameraOverlay');
+
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    let img = null;
+    let scale = parseFloat(scaleRange.value);
+    let offsetX = parseFloat(offsetXRange.value);
+    let offsetY = parseFloat(offsetYRange.value);
+
+    let isDragging = false;
+    let lastX = 0;
+    let lastY = 0;
+    let lastDist = null;
+
+    function resizeCanvas() {
+      const caseElement = document.querySelector('.case');
+      const rect = caseElement.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+      draw();
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('load', resizeCanvas);
+
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        img = new Image();
+        img.onload = function() {
+          // إعادة ضبط القيم عند اختيار صورة جديدة
+          scale = 1;
+          offsetX = 0;
+          offsetY = 0;
+          scaleRange.value = scale;
+          offsetXRange.value = offsetX;
+          offsetYRange.value = offsetY;
+          draw();
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    function draw() {
+      if (!ctx) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (!img) {
+        const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+        gradient.addColorStop(0, '#f0f0f0');
+        gradient.addColorStop(1, '#ddd');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        return;
+      }
+
+      const imgRatio = img.width / img.height;
+      const canvasRatio = canvas.width / canvas.height;
+
+      let drawWidth, drawHeight;
+      if (imgRatio > canvasRatio) {
+        drawHeight = canvas.height * scale;
+        drawWidth = drawHeight * imgRatio;
+      } else {
+        drawWidth = canvas.width * scale;
+        drawHeight = drawWidth / imgRatio;
+      }
+
+      const centerX = canvas.width / 2 + offsetX;
+      const centerY = canvas.height / 2 + offsetY;
+
+      const x = centerX - drawWidth / 2;
+      const y = centerY - drawHeight / 2;
+
+      ctx.drawImage(img, x, y, drawWidth, drawHeight);
+    }
+
+    scaleRange.addEventListener('input', () => {
+      scale = parseFloat(scaleRange.value);
+      draw();
+    });
+
+    offsetXRange.addEventListener('input', () => {
+      offsetX = parseFloat(offsetXRange.value);
+      draw();
+    });
+
+    offsetYRange.addEventListener('input', () => {
+      offsetY = parseFloat(offsetYRange.value);
+      draw();
+    });
+
+    // تغيير شكل الكاميرا حسب الموديل
+    function updatePhoneModel() {
+      const value = phoneModelSelect.value;
+      phoneWrapper.className = 'phone-wrapper ' + value;
+
+      cameraOverlay.innerHTML = '';
+
+      if (value === 's23' || value === 's24') {
+        for (let i = 0; i < 3; i++) {
+          const lens = document.createElement('div');
+          lens.className = 'camera-lens';
+          cameraOverlay.appendChild(lens);
+        }
+      } else if (value === 's23-ultra' || value === 's24-ultra') {
+        for (let i = 0; i < 4; i++) {
+          const lens = document.createElement('div');
+          lens.className = 'camera-lens';
+          cameraOverlay.appendChild(lens);
+        }
+      } else if (value === 'note-20') {
+        for (let i = 0; i < 3; i++) {
+          const lens = document.createElement('div');
+          lens.className = 'camera-lens';
+          cameraOverlay.appendChild(lens);
+        }
+      } else {
+        // iPhone: لا عدسات منفصلة، فقط شكل الجزيرة من الـ CSS
+      }
+    }
+
+    phoneModelSelect.addEventListener('change', updatePhoneModel);
+    updatePhoneModel();
+
+    // سحب بالماوس
+    canvas.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      lastX = e.offsetX;
+      lastY = e.offsetY;
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      offsetX += e.offsetX - lastX;
+      offsetY += e.offsetY - lastY;
+      lastX = e.offsetX;
+      lastY = e.offsetY;
+      offsetXRange.value = offsetX;
+      offsetYRange.value = offsetY;
+      draw();
+    });
+
+    canvas.addEventListener('mouseup', () => isDragging = false);
+    canvas.addEventListener('mouseleave', () => isDragging = false);
+
+    // لمس + Pinch Zoom
+    canvas.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        lastX = e.touches[0].clientX;
+        lastY = e.touches[0].clientY;
+      }
+    }, { passive: false });
+
+    canvas.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+
+      if (e.touches.length === 1) {
+        const touch = e.touches[0];
+        offsetX += touch.clientX - lastX;
+        offsetY += touch.clientY - lastY;
+        lastX = touch.clientX;
+        lastY = touch.clientY;
+        offsetXRange.value = offsetX;
+        offsetYRange.value = offsetY;
+        draw();
+      }
+
+      if (e.touches.length === 2) {
+        const dist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+
+        if (!lastDist) lastDist = dist;
+
+        const factor = dist / lastDist;
+        scale *= factor;
+        if (scale < 0.3) scale = 0.3;
+        if (scale > 3) scale = 3;
+        scaleRange.value = scale;
+        lastDist = dist;
+        draw();
+      }
+    }, { passive: false });
+
+    canvas.addEventListener('touchend', () => {
+      lastDist = null;
+    });
+
+    // تحميل التصميم PNG
+    downloadBtn.addEventListener('click', () => {
+      const link = document.createElement('a');
+      link.download = 'phone-case.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    });
+  </script>
+</body>
+</html>
